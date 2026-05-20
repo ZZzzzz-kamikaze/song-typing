@@ -1,12 +1,12 @@
 <!doctype html><html lang="ja"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>song typing</title>
 <style>
-body{font-family:Meiryo,sans-serif;background:#0b1220;color:#e8f0ff;margin:0;padding:20px}.app{max-width:1100px;margin:auto}
+body{font-family:Meiryo,sans-serif;background:#0b1220;color:#e8f0ff;margin:0;padding:20px}.app{max-width:1100px;margin:auto;display:flex;flex-direction:column}
 .media{display:grid;grid-template-columns:1fr;gap:10px;margin:8px 0}.videoWrap{display:none;position:relative;width:100%;max-width:760px;margin:auto}.videoWrap video{width:100%;border-radius:8px;background:#000}.overlay{position:absolute;left:0;right:0;bottom:6%;text-align:center;text-shadow:0 1px 2px #000}
 .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.card{background:#111a2b;padding:8px;border-radius:8px}
 .progress{height:10px;background:#22304b;border-radius:999px;overflow:hidden;margin:8px 0}.bar{height:100%;width:0;background:linear-gradient(90deg,#3ac7ff,#70ffa7)}
-.ruby{color:#ffe7a3;text-align:center}.lyric{font-size:2rem;text-align:center;min-height:2.2em}.typing{text-align:center;color:#8ea2c8;min-height:1.5em;margin-top:10px}.nextline{text-align:center;color:#93a8d1;font-size:.9rem;min-height:1.2em;margin-top:12px}.ok{color:#7CFC8A}
+.ruby{color:#ffe7a3;text-align:center}.lyric{font-size:2rem;text-align:center;min-height:2.2em}.typing{text-align:center;color:#8ea2c8;min-height:1.5em;margin-top:4px}.nextline{text-align:center;color:#93a8d1;font-size:.9rem;min-height:1.2em;margin-top:12px}.ok{color:#7CFC8A}
 .controls{display:flex;gap:8px;flex-wrap:wrap}.result{display:none;background:#101a2c;padding:12px;border-radius:8px;margin-top:10px}.topinfo{background:#13213d;border-radius:8px;padding:8px;margin:8px 0;color:#bcd1ff}
-.guide{background:#111a2b;border-radius:8px;padding:8px;margin-top:6px}.kbrow{display:flex;justify-content:center;gap:6px;margin:4px 0}.kbd{min-width:32px;height:30px;padding:0 6px;display:grid;place-items:center;border-radius:6px;background:#263754;font-size:12px}.wide{min-width:64px}.wider{min-width:112px}.hit{background:#4a6ee0}
+.guide{background:#111a2b;border-radius:8px;padding:8px;margin-top:6px;order:999}.kbrow{display:flex;justify-content:center;gap:6px;margin:4px 0}.kbd{min-width:32px;height:30px;padding:0 6px;display:grid;place-items:center;border-radius:6px;background:#263754;font-size:12px}.wide{min-width:64px}.wider{min-width:112px}.hit{background:#4a6ee0}
 .fingers{display:flex;gap:8px;align-items:flex-end;justify-content:center;margin-top:6px}.fingerbar{width:28px;height:52px;background:#cfd3d8;border-radius:16px 16px 0 0;opacity:.7}.fingerbar.active{background:#1da1f2;opacity:1}.thumb{width:44px;height:32px;border-radius:20px 20px 0 0}
 </style>
 </head><body><div class="app">
@@ -16,10 +16,11 @@ body{font-family:Meiryo,sans-serif;background:#0b1220;color:#e8f0ff;margin:0;pad
 <div class="media"><audio id="audio" preload="metadata" controls></audio><div id="videoWrap" class="videoWrap"><video id="video" controls playsinline></video><div class="overlay"><div class="ruby" id="vruby"></div><div class="lyric" id="vlyric"></div></div></div></div>
 <div class="stats"><div class="card">スコア <b id="score">0</b></div><div class="card">ミス <b id="miss">0</b></div><div class="card">正確率 <b id="acc">0.00%</b></div><div class="card">打鍵/秒 <b id="kps">0.00</b></div><div class="card">打鍵数 <b id="typedCount">0</b></div><div class="card">正打鍵数 <b id="correctCount">0</b></div></div>
 <div class="ruby" id="ruby">るび</div><div class="lyric" id="lyric">原文（漢字含む）</div>
-<div class="guide"><div id="keyGuide"></div><div id="fingerBars" class="fingers"></div></div>
 <div class="typing" id="typing">romaji</div><div class="nextline" id="nextline"></div>
 <div class="progress"><div class="bar" id="bar"></div></div>
-<div id="result" class="result"></div></div>
+<div id="result" class="result"></div>
+<div class="guide"><div id="keyGuide"></div><div id="fingerBars" class="fingers"></div></div>
+</div>
 <script>
 const kataToHira=s=>s.replace(/[ァ-ヶ]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
 const map={"あ":["a"],"い":["i","yi"],"う":["u","wu","whu"],"え":["e"],"お":["o"],"か":["ka","ca"],"き":["ki"],"く":["ku","cu","qu"],"け":["ke"],"こ":["ko","co"],"さ":["sa"],"し":["shi","si","ci"],"す":["su"],"せ":["se","ce"],"そ":["so"],"た":["ta"],"ち":["chi","ti"],"つ":["tsu","tu"],"て":["te"],"と":["to"],"な":["na"],"に":["ni"],"ぬ":["nu"],"ね":["ne"],"の":["no"],"は":["ha"],"ひ":["hi"],"ふ":["fu","hu"],"へ":["he"],"ほ":["ho"],"ま":["ma"],"み":["mi"],"む":["mu"],"め":["me"],"も":["mo"],"や":["ya"],"ゆ":["yu"],"よ":["yo"],"ら":["ra"],"り":["ri"],"る":["ru"],"れ":["re"],"ろ":["ro"],"わ":["wa"],"を":["wo","o"],"ん":["nn","xn","n"],"ー":["-"],"が":["ga"],"ぎ":["gi"],"ぐ":["gu"],"げ":["ge"],"ご":["go"],"ざ":["za"],"じ":["ji","zi"],"ず":["zu"],"ぜ":["ze"],"ぞ":["zo"],"だ":["da"],"ぢ":["di","ji"],"づ":["du","zu"],"で":["de"],"ど":["do"],"ば":["ba"],"び":["bi"],"ぶ":["bu"],"べ":["be"],"ぼ":["bo"],"ぱ":["pa"],"ぴ":["pi"],"ぷ":["pu"],"ぺ":["pe"],"ぽ":["po"],"ぁ":["xa","la"],"ぃ":["xi","li"],"ぅ":["xu","lu"],"ぇ":["xe","le"],"ぉ":["xo","lo"],"ゃ":["xya","lya"],"ゅ":["xyu","lyu"],"ょ":["xyo","lyo"],"ゔ":["vu"]," ":[" "],"-": ["-"],"^": ["^"],"¥":["¥","\\"],"@": ["@"],"[": ["["],"]": ["]"],";": [";"],":": [":"],",": [","],".": ["."],"/": ["/"],"\\": ["\\"]};
@@ -28,11 +29,11 @@ const $=id=>document.getElementById(id),audio=$("audio"),video=$("video"),videoW
 let chart=[],raf=0,mode="none"; 
 let st={started:false,startTime:0,total:0,correct:0,miss:0,score:0,line:-1,typed:"",display:"",states:[],pausedAt:0,pausedMs:0,lastKeyTime:0};
 const tRe=/^(\d+):(\d{1,2})(?:\.(\d+))?$/;
-const keyFinger={q:0,a:0,z:0,w:1,s:1,x:1,e:2,d:2,c:2,r:3,f:3,v:3,t:3,g:3,b:3,y:6,h:6,n:6,u:6,j:6,m:6,i:7,k:7,o:8,l:8,p:9,1:0,2:1,3:2,4:3,5:3,6:6,7:6,8:7,9:8,0:9,"-":9,"^":9,"¥":9,"@":9,"[":9,"]":9,";":9,":":9,",":8,".":8,"/":8,"\\":9," ":5};
+const keyFinger={q:0,w:1,e:2,r:3,t:3,y:6,u:6,i:7,o:8,p:9,a:0,s:1,d:2,f:3,g:3,h:6,j:6,k:7,l:8,z:0,x:1,c:2,v:3,b:3,n:6,m:6,1:0,2:1,3:2,4:3,5:3,6:6,7:6,8:7,9:8,0:9,"-":9,"^":9,"¥":9,"@":9,"[":9,"]":9,";":9,":":9,",":8,".":8,"/":8,"\\":9," ":5};
 function playMissBeep(){const C=window.AudioContext||window.webkitAudioContext;if(!C) return;const ctx=playMissBeep.ctx||(playMissBeep.ctx=new C());const o=ctx.createOscillator(),g=ctx.createGain();o.type="square";o.frequency.value=880;g.gain.value=0.06;o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.06);} 
 function topInfo(msg){$("topinfo").textContent=msg;}
 function toSec(s){const m=s.match(tRe);return m?parseInt(m[1],10)*60+parseInt(m[2],10)+(m[3]?Number('0.'+m[3]):0):null;}
-function parseTxt(txt){const stripKanji=v=>v.replace(/[一-龯々〆ヵヶ]/g,"");return txt.split(/\r?\n/).map(v=>v.trim()).filter(v=>v!=="").map(line=>{let raw=line.replace(/^\|/,"");let at=null;const m=raw.match(/^(\S+)\s+(.*)$/);if(m){const t=toSec(m[1]);if(t!==null){at=t;raw=m[2].trim();}}if(raw==="xx:xx"||raw==="\null"||toSec(raw)!==null) return {at,lyric:"",ruby:"",hide:true};
+function parseTxt(txt){const stripKanji=v=>v.replace(/[一-龯々〆ヵヶ]/g,"");return txt.split(/\r?\n/).map(v=>v.trim()).filter(v=>v!=="").map(line=>{let raw=line.replace(/^\|/,"");let at=null;const m=raw.match(/^(\S+)\s+(.*)$/);if(m){const t=toSec(m[1]);if(t!==null){at=t;raw=m[2].trim();}}if(raw==="mm:ss \\null"||raw==="\null"||toSec(raw)!==null) return {at,lyric:"",ruby:"",hide:true};
 if(/^".*"$/.test(raw)){const lit=raw.slice(1,-1);return{at,lyric:lit,ruby:kataToHira(lit),hide:false};}if(raw.includes("|")){const p=raw.split("|");return{at,lyric:(p[0]||"").trim(),ruby:kataToHira((p[1]||p[0]||"").trim()),hide:false};}
 const lyric=raw.replace(/\([^)]*\)/g,"").replace(/\s+/g,"").trim();let ruby="",last=0,x;const rx=/([^()]+)\(([^)]+)\)/g;while((x=rx.exec(raw))){const outside=raw.slice(last,x.index).replace(/\s+/g,"");if(outside) ruby+=outside;const preKana=stripKanji((x[1]||"").replace(/\s+/g,""));if(preKana) ruby+=preKana;ruby+=x[2].replace(/\s+/g,"");last=rx.lastIndex;}const tail=raw.slice(last).replace(/\s+/g,"");if(tail) ruby+=tail;return{at,lyric:lyric||raw,ruby:kataToHira(ruby||lyric||raw),hide:false};});}
 function getChoices(t,i){const two=t.slice(i,i+2);if(yoon[two])return{opts:yoon[two],step:2};return{opts:map[t[i]]||[t[i]],step:1};}
