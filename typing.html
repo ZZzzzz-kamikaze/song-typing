@@ -1,28 +1,253 @@
-<!doctype html><html lang="ja"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>song typing</title>
-<style>
-body{font-family:Meiryo,sans-serif;background:#0b1220;color:#e8f0ff;margin:0;padding:20px}.app{max-width:1100px;margin:auto;display:flex;flex-direction:column}
-.media{display:grid;grid-template-columns:1fr;gap:10px;margin:8px 0}.videoWrap{display:none;position:relative;width:100%;max-width:760px;margin:auto}.videoWrap video{width:100%;border-radius:8px;background:#000}.overlay{position:absolute;left:0;right:0;bottom:6%;text-align:center;text-shadow:0 1px 2px #000}
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.card{background:#111a2b;padding:8px;border-radius:8px}
-.progress{height:10px;background:#22304b;border-radius:999px;overflow:hidden;margin:8px 0}.bar{height:100%;width:0;background:linear-gradient(90deg,#3ac7ff,#70ffa7)}
-.ruby{color:#ffe7a3;text-align:center}.lyric{font-size:2rem;text-align:center;min-height:2.2em}.typing{text-align:center;color:#8ea2c8;min-height:1.5em;margin-top:0}.nextline{text-align:center;color:#93a8d1;font-size:.9rem;min-height:1.2em;margin-top:12px}.ok{color:#7CFC8A}
-.controls{display:flex;gap:8px;flex-wrap:wrap}.result{display:none;background:#101a2c;padding:12px;border-radius:8px;margin-top:10px}.topinfo{background:#13213d;border-radius:8px;padding:8px;margin:8px 0;color:#bcd1ff}
-.guide{background:#111a2b;border-radius:8px;padding:8px;margin-top:6px;order:999}.kbrow{display:flex;justify-content:center;gap:6px;margin:4px 0}.kbrow.offset1{margin-left:35px}.kbrow.offset2{margin-left:-30px}.kbrow.offset3{margin-left:15px}.kbd{min-width:32px;height:30px;padding:0 6px;display:grid;place-items:center;border-radius:6px;background:#263754;font-size:0px}.wide{min-width:64px}.wider{min-width:60px}.spacebar{flex:1;min-width:200px}.hit{background:#4a6ee0}
-.fingers{display:flex;gap:8px;align-items:flex-end;justify-content:center;margin-top:6px}.fingerbar{width:28px;height:52px;background:#cfd3d8;border-radius:16px 16px 0 0;opacity:.7}.fingerbar.active{background:#1da1f2;opacity:1}.thumb{width:44px;height:32px;border-radius:20px 20px 0 0}
-</style>
-</head><body><div class="app">
-<div style="display:flex;align-items:center;gap:12px"><img id="logo" src="./typing%20song_logo.png" alt="song typing" style="height:54px;border-radius:8px;background:#fff;padding:4px" onerror="this.style.display='none'" /><h2 style="margin:0">song typing（Space開始 / Esc一時停止 / Ctrl+Qリタイア）</h2></div>
-<div id="topinfo" class="topinfo">準備中...</div>
-<div class="controls"><button id="loadBtn">同フォルダ(song typing)から読み込み</button><button id="startBtn">開始</button><button id="retireBtn">リタイア</button><input id="txtFile" type="file" accept=".txt,text/plain" /><input id="mediaFile" type="file" accept="audio/mpeg,video/mp4" /></div>
-<div class="media"><audio id="audio" preload="metadata" controls></audio><div id="videoWrap" class="videoWrap"><video id="video" controls playsinline></video><div class="overlay"><div class="ruby" id="vruby"></div><div class="lyric" id="vlyric"></div></div></div></div>
-<div class="stats"><div class="card">スコア <b id="score">0</b></div><div class="card">打鍵数 <b id="typedCount">0</b></div><div class="card">正打鍵数 <b id="correctCount">0</b></div><div class="card">ミス <b id="miss">0</b></div><div class="card">正確率 <b id="acc">0.00%</b></div><div class="card">打鍵/秒 <b id="kps">0.00</b></div></div>
-<div class="ruby" id="ruby">るび</div><div class="lyric" id="lyric">原文（漢字含む）</div>
-<div class="typing" id="typing">romaji</div><div class="nextline" id="nextline"></div>
-<div class="progress"><div class="bar" id="bar"></div></div>
-<div id="result" class="result"></div>
-<div class="guide"><div id="keyGuide"></div><div id="fingerBars" class="fingers"></div></div>
-</div>
-<script>
-const kataToHira=s=>s.replace(/[ァ-ヶ]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
+<!doctype html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>song typing</title>
+	<style>
+		body {
+			font-family: Meiryo, sans-serif;
+			background: #0b1220;
+			color: #e8f0ff;
+			margin: 0;
+			padding: 20px
+		}
+
+		.app {
+			max-width: 1100px;
+			margin: auto;
+			display: flex;
+			flex-direction: column
+		}
+
+		.media {
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 10px;
+			margin: 8px 0
+		}
+
+		.videoWrap {
+			display: none;
+			position: relative;
+			width: 100%;
+			max-width: 760px;
+			margin: auto
+		}
+
+		.videoWrap video {
+			width: 100%;
+			border-radius: 8px;
+			background: #000
+		}
+
+		.overlay {
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 6%;
+			text-align: center;
+			text-shadow: 0 1px 2px #000
+		}
+
+		.stats {
+			display: grid;
+			grid-template-columns: repeat(6, 1fr);
+			gap: 8px
+		}
+
+		.card {
+			background: #111a2b;
+			padding: 8px;
+			border-radius: 8px
+		}
+
+		.progress {
+			height: 10px;
+			background: #22304b;
+			border-radius: 999px;
+			overflow: hidden;
+			margin: 8px 0
+		}
+
+		.bar {
+			height: 100%;
+			width: 0;
+			background: linear-gradient(90deg, #3ac7ff, #70ffa7)
+		}
+
+		.ruby {
+			color: #ffe7a3;
+			text-align: center
+		}
+
+		.lyric {
+			font-size: 2rem;
+			text-align: center;
+			min-height: 2.2em
+		}
+
+		.typing {
+			text-align: center;
+			color: #8ea2c8;
+			min-height: 1.5em;
+			margin-top: 0
+		}
+
+		.nextline {
+			text-align: center;
+			color: #93a8d1;
+			font-size: .9rem;
+			min-height: 1.2em;
+			margin-top: 12px
+		}
+
+		.ok {
+			color: #7CFC8A
+		}
+
+		.controls {
+			display: flex;
+			gap: 8px;
+			flex-wrap: wrap
+		}
+
+		.result {
+			display: none;
+			background: #101a2c;
+			padding: 12px;
+			border-radius: 8px;
+			margin-top: 10px
+		}
+
+		.topinfo {
+			background: #13213d;
+			border-radius: 8px;
+			padding: 8px;
+			margin: 8px 0;
+			color: #bcd1ff
+		}
+
+		.guide {
+			background: #111a2b;
+			border-radius: 8px;
+			padding: 8px;
+			margin-top: 6px;
+			order: 999
+		}
+
+		.kbrow {
+			display: flex;
+			justify-content: center;
+			gap: 6px;
+			margin: 4px 0
+		}
+
+		.kbrow.offset2 {
+			margin-left: 30px
+		}
+
+		.kbrow.offset3 {
+			margin-left: 30px
+		}
+
+		.kbd {
+			min-width: 32px;
+			height: 30px;
+			padding: 0 6px;
+			display: grid;
+			place-items: center;
+			border-radius: 6px;
+			background: #263754;
+			font-size: 12px
+		}
+
+		.wide {
+			min-width: 64px
+		}
+
+		.wider {
+			min-width: 60px
+		}
+
+		.spacebar {
+			flex: 1;
+			min-width: 200px
+		}
+
+		.hit {
+			background: #4a6ee0
+		}
+
+		.fingers {
+			display: flex;
+			gap: 8px;
+			align-items: flex-end;
+			justify-content: center;
+			margin-top: 6px
+		}
+
+		.fingerbar {
+			width: 28px;
+			height: 52px;
+			background: #cfd3d8;
+			border-radius: 16px 16px 0 0;
+			opacity: .7
+		}
+
+		.fingerbar.active {
+			background: #1da1f2;
+			opacity: 1
+		}
+
+		.thumb {
+			width: 44px;
+			height: 32px;
+			border-radius: 20px 20px 0 0
+		}
+	</style>
+</head>
+
+<body>
+	<div class="app">
+		<div style="display:flex;align-items:center;gap:12px"><img id="logo" src="./typing%20song_logo.png" alt="song typing" style="height:54px;border-radius:8px;background:#fff;padding:4px" onerror="this.style.display='none'" />
+			<h2 style="margin:0">song typing（Space開始 / Esc一時停止 / Ctrl+Qリタイア）</h2>
+		</div>
+		<div id="topinfo" class="topinfo">準備中...</div>
+		<div class="controls">
+			<button id="loadBtn">同フォルダ(song typing)から読み込み</button><button id="startBtn">開始</button><button id="retireBtn">リタイア</button><input id="txtFile" type="file" accept=".txt,text/plain" /><input id="mediaFile" type="file" accept="audio/mpeg,video/mp4" /></div>
+			<div class="media"><audio id="audio" preload="metadata" controls></audio>
+				<div id="videoWrap" class="videoWrap"><video id="video" controls playsinline></video>
+					<div class="overlay">
+						<div class="ruby" id="vruby"></div>
+						<div class="lyric" id="vlyric"></div>
+					</div>
+				</div>
+			</div>
+			<div class="stats">
+				<div class="card">スコア <b id="score">0</b></div>
+				<div class="card">打鍵数 <b id="typedCount">0</b></div>
+				<div class="card">正打鍵数 <b id="correctCount">0</b></div>
+				<div class="card">ミス <b id="miss">0</b></div>
+				<div class="card">正確率 <b id="acc">0.00%</b></div>
+				<div class="card">打鍵/秒 <b id="kps">0.00</b></div>
+			</div>
+			<div class="ruby" id="ruby">るび</div>
+			<div class="lyric" id="lyric">原文（漢字含む）</div>
+			<div class="typing" id="typing">romaji</div>
+			<div class="nextline" id="nextline"></div>
+			<div class="progress">
+				<div class="bar" id="bar"></div>
+			</div>
+			<div id="result" class="result"></div>
+			<div class="guide">
+				<div id="keyGuide"></div>
+				<div id="fingerBars" class="fingers"></div>
+			</div>
+		</div>
+		<script>
+			const kataToHira=s=>s.replace(/[ァ-ヶ]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
 const map={"あ":["a"],"い":["i","yi"],"う":["u","wu","whu"],"え":["e"],"お":["o"],"か":["ka","ca"],"き":["ki"],"く":["ku","cu","qu"],"け":["ke"],"こ":["ko","co"],"さ":["sa"],"し":["shi","si","ci"],"す":["su"],"せ":["se","ce"],"そ":["so"],"た":["ta"],"ち":["chi","ti"],"つ":["tsu","tu"],"て":["te"],"と":["to"],"な":["na"],"に":["ni"],"ぬ":["nu"],"ね":["ne"],"の":["no"],"は":["ha"],"ひ":["hi"],"ふ":["fu","hu"],"へ":["he"],"ほ":["ho"],"ま":["ma"],"み":["mi"],"む":["mu"],"め":["me"],"も":["mo"],"や":["ya"],"ゆ":["yu"],"よ":["yo"],"ら":["ra"],"り":["ri"],"る":["ru"],"れ":["re"],"ろ":["ro"],"わ":["wa"],"を":["wo","o"],"ん":["nn","xn","n"],"ー":["-"],"が":["ga"],"ぎ":["gi"],"ぐ":["gu"],"げ":["ge"],"ご":["go"],"ざ":["za"],"じ":["ji","zi"],"ず":["zu"],"ぜ":["ze"],"ぞ":["zo"],"だ":["da"],"ぢ":["di","ji"],"づ":["du","zu"],"で":["de"],"ど":["do"],"ば":["ba"],"び":["bi"],"ぶ":["bu"],"べ":["be"],"ぼ":["bo"],"ぱ":["pa"],"ぴ":["pi"],"ぷ":["pu"],"ぺ":["pe"],"ぽ":["po"],"ぁ":["xa","la"],"ぃ":["xi","li"],"ぅ":["xu","lu"],"ぇ":["xe","le"],"ぉ":["xo","lo"],"ゃ":["xya","lya"],"ゅ":["xyu","lyu"],"ょ":["xyo","lyo"],"ゔ":["vu"]," ":[" "],"-": ["-"],"^": ["^"],"¥":["¥","\\"],"@": ["@"],"[": ["["],"]": ["]"],";": [";"],":": [":"],",": [","],".": ["."],"/": ["/"],"\\": ["\\"]};
 const yoon={"きゃ":["kya"],"きゅ":["kyu"],"きょ":["kyo"],"しゃ":["sha","sya"],"しゅ":["shu","syu"],"しょ":["sho","syo"],"ちゃ":["cha","tya","cya"],"ちゅ":["chu","tyu","cyu"],"ちょ":["cho","tyo","cyo"],"にゃ":["nya"],"にゅ":["nyu"],"にょ":["nyo"],"ひゃ":["hya"],"ひゅ":["hyu"],"ひょ":["hyo"],"みゃ":["mya"],"みゅ":["myu"],"みょ":["myo"],"りゃ":["rya"],"りゅ":["ryu"],"りょ":["ryo"],"ぎゃ":["gya"],"ぎゅ":["gyu"],"ぎょ":["gyo"],"じゃ":["ja","jya","zya"],"じゅ":["ju","jyu","zyu"],"じょ":["jo","jyo","zyo"],"びゃ":["bya"],"びゅ":["byu"],"びょ":["byo"],"ぴゃ":["pya"],"ぴゅ":["pyu"],"ぴょ":["pyo"],"ゔぁ":["va"],"ゔぃ":["vi"],"ゔぇ":["ve"],"ゔぉ":["vo"]};
 const $=id=>document.getElementById(id),audio=$("audio"),video=$("video"),videoWrap=$("videoWrap");
@@ -73,4 +298,7 @@ let mediaLoaded=false;try{const vRes=await fetch('./song typing/typing_onsei.mp4
 if(!mediaLoaded){try{const aRes=await fetch('./song typing/typing_onsei.mp3');if(aRes.ok){setMediaByFile(new File([await aRes.blob()],'typing_onsei.mp3',{type:'audio/mpeg'}));mediaLoaded=true;}}catch{}}
 if(!mediaLoaded){setMediaByFile(null);}topInfo(`song typing フォルダ読込完了（歌詞 ${chart.length} 行）`);
 render();}catch{topInfo('自動読み込み失敗。ファイル選択で読み込んでください。');}});
-</script></body></html>
+		</script>
+</body>
+
+</html>
